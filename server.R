@@ -1,5 +1,6 @@
 shinyServer(function(input, output,session) {
   
+  tab_list <- NULL
   
   contract_selected<-reactive({
     
@@ -187,6 +188,27 @@ shinyServer(function(input, output,session) {
     
     DT::datatable(selected,rownames=F,options=list(scrollX=TRUE))
     
+  })
+  
+  
+  observeEvent(event_data("plotly_click"),
+   {
+    
+    df<-data.frame(comment='to be done')
+    
+    appendTab(inputId = "tabs",
+              tabPanel(
+                'OA_details',
+                DT::renderDataTable(df,
+                                    options=list(scrollX=T))
+              ))
+    
+    tab_list <<- c(tab_list, 'OA_details')
+    
+  
+  
+  updateTabsetPanel(session, "tabs", selected = 'Data')
+  
   })
   
  

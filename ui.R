@@ -41,7 +41,13 @@ ui<-tagList(
         fluidRow(column(12,plotlyOutput('plot1',height='500px')),
                  tags$p('Note: Bubble size indicates available seats number',style="margin-left: 30px;")),
         br(),
-        fluidRow(column(12,DT::dataTableOutput('table1')))
+        fluidRow(
+                    
+            tabsetPanel(id='tabs',
+                        tabPanel(title='Data',
+                        column(12, 
+                        DT::dataTableOutput('table1')))
+            ))
         
         ),
         
