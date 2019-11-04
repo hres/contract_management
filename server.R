@@ -145,8 +145,6 @@ shinyServer(function(input, output,session) {
     
     }
     
-   
-    
   })
   
   result_tb<-reactive({
@@ -164,7 +162,7 @@ shinyServer(function(input, output,session) {
 }',input$search_text)
     
     
-    rs<-Search(index='test_contract',body=query,raw=T,size=500)%>%fromJSON()%>%'['('hits')
+    rs<-Search(conn = conn, index='test_contract',body=query,raw=T,size=500)%>%fromJSON()%>%'['('hits')
     rs<-rs$hits$hits$`_source`
     
     if(!is.null(rs)){rs<-left_join(rs,contract[,c('Contractor','position')])%>%distinct()}
@@ -191,26 +189,42 @@ shinyServer(function(input, output,session) {
   })
   
   
-  observeEvent(event_data("plotly_click"),
+  
+  observeEvent(event_data('plotly_click'),
    {
-    
-    df<-data.frame(comment='to be done')
-    
-    appendTab(inputId = "tabs",
-              tabPanel(
-                'OA_details',
-                DT::renderDataTable(df,
-                                    options=list(scrollX=T))
-              ))
-    
-    tab_list <<- c(tab_list, 'OA_details')
-    
-  
-  
-  updateTabsetPanel(session, "tabs", selected = 'Data')
-  
+     d<-event_data('plotly_click')
+     if(!is.null(d)){
+       
+       #code copied from above to get the oa code
+       df<-contract_value$value%>%
+         select(Contractor,Description,`TA/PA`,CA,OA,`Contract value`,Remaining,`End date`,`Seats Available`)%>%
+         mutate(`Contract value`=dollar(`Contract value`),
+                `End date`=ymd(`End date`))
+       
+       selected_value<-d%>%select(y)%>%collect()
+       
+       df_select<-contract_value$value%>%
+         filter(Remaining==as.integer(selected_value))
+       
+       oacode <-df[which(df$Remaining==df_select$Remaining),]$OA
+       
+       #use oa code to find the proper table to display
+       index <- match(oacode, oa)
+       df2 <- ds[[index]]
+       df2$value <- format(round(as.numeric(df2$value), 2), nsmall=2, big.mark=",")
+       
+       removeTab(inputId = "tabs", 'OA_details')
+       appendTab(inputId = "tabs",
+                 tabPanel(
+                   'OA_details',
+                   DT::renderDataTable(df2,
+                                       options=list(scrollX=T))
+                 ))
+       updateTabsetPanel(session, "tabs", selected = 'Data')
+       
+       if(!('OA_details' %in% tab_list)){
+         tab_list <<- c(tab_list, 'OA_details')
+       }
+     }
   })
-  
- 
- 
 })

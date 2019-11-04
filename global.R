@@ -14,8 +14,10 @@ library(elastic)
 library(jsonlite)
 library(stringdist)
 
+
+source('readtxt.R')
 contract<-read_excel('contract.xlsx',1)
-connect(es_host = "elastic-gate.hc.local", es_port = 80,errors = "complete")
+conn <- connect(host = "elastic-gate.hc.local", port = 80,errors = "complete")
 
 query<-'
 {
@@ -36,7 +38,7 @@ query<-'
   }
 }'
 
-positions<-Search(index='test_contract',body=query,size=0,raw=T)%>%fromJSON()
+positions<-Search(conn = conn, index='test_contract',body=query,size=0,raw=T)%>%fromJSON()
 positions<-positions$aggregations$job$buckets
 
 streams<-positions$key
