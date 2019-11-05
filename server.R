@@ -134,7 +134,7 @@ shinyServer(function(input, output,session) {
     selected_value<-d%>%select(y)%>%collect()
     
     df_select<-contract_value$value%>%
-               filter(Remaining==as.integer(selected_value))
+               filter(Remaining==as.double(selected_value))
     
     df<-rbind(df[which(df$Remaining==df_select$Remaining),],df[which(df$Remaining!=df_select$Remaining),])
     
@@ -204,7 +204,7 @@ shinyServer(function(input, output,session) {
        selected_value<-d%>%select(y)%>%collect()
        
        df_select<-contract_value$value%>%
-         filter(Remaining==as.integer(selected_value))
+         filter(Remaining==as.double(selected_value))
        
        oacode <-df[which(df$Remaining==df_select$Remaining),]$OA
        

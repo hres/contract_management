@@ -56,11 +56,12 @@ contract <-read_excel('contract.xlsx',1)
 
 for(i in 1:nrow(contract)){
   if(!is.na(contract$OA[i])){
-    index <- match(contract$OA[i], spent$OA)
-    contract$Remaining[i] <- contract$`Contract value`[i] - spent$used[index]
+    index_c <- match(contract$OA[i], spent$OA)
+    contract$Remaining[i] <- contract$`Contract value`[i] - spent$used[index_c]
   }
 }
 
 
 l <- list(contract, spent)
 write.xlsx(l,file='./contract.xlsx')
+
