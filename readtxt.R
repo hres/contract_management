@@ -44,23 +44,23 @@ for (i in seq_along(oa)){
 }
 
 
-spent <- data.frame("OA" = unlist(oa), "used" = NA)
-for(i in 1:nrow(spent)){
-  oa_code <- spent$OA[i]
-  index <- match(oa_code, oa)
-  spent$used[i] <- sum(ds[[index]]$value)
-}
-
-
-contract <-read_excel('contract.xlsx',1)
-
-for(i in 1:nrow(contract)){
-  if(!is.na(contract$OA[i])){
-    index <- match(contract$OA[i], spent$OA)
-    contract$Remaining[i] <- contract$`Contract value`[i] - spent$used[index]
-  }
-}
-
-
-l <- list(contract, spent)
-write.xlsx(l,file='./contract.xlsx')
+# spent <- data.frame("OA" = unlist(oa), "used" = NA)
+# for(i in 1:nrow(spent)){
+#   oa_code <- spent$OA[i]
+#   index <- match(oa_code, oa)
+#   spent$used[i] <- sum(ds[[index]]$value)
+# }
+# 
+# 
+# contract <-read_excel('contract.xlsx',1)
+# 
+# for(i in 1:nrow(contract)){
+#   if(!is.na(contract$OA[i])){
+#     index <- match(contract$OA[i], spent$OA)
+#     contract$Remaining[i] <- contract$`Contract value`[i] - spent$used[index]
+#   }
+# }
+# 
+# 
+# l <- list(contract, spent)
+# write.xlsx(l,file='./contract.xlsx')

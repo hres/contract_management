@@ -162,7 +162,7 @@ shinyServer(function(input, output,session) {
 }',input$search_text)
     
     
-    rs<-Search(conn = conn, index='test_contract',body=query,raw=T,size=500)%>%fromJSON()%>%'['('hits')
+    rs<-Search(index='test_contract',body=query,raw=T,size=500)%>%fromJSON()%>%'['('hits')
     rs<-rs$hits$hits$`_source`
     
     if(!is.null(rs)){rs<-left_join(rs,contract[,c('Contractor','position')])%>%distinct()}
