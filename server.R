@@ -121,11 +121,48 @@ shinyServer(function(input, output,session) {
       mutate(`Contract value`=dollar(`Contract value`),
              `End date`=ymd(`End date`))
     
+    new_row<-df$OA[!df$OA %in% ta_summary$OA]
+    new_row<-new_row[!is.na(new_row)]
+    new_row<-data.frame(OA=new_row,
+                        Resource=NA,
+                        `Resource Category`=NA,
+                        `TA Number`=NA,
+                        `Total Days`=NA,
+                        `Days Utilized`=NA,
+                        `Days Remaining`=NA,check.names=F)
+    
+    ta_summary<-rbind(ta_summary,new_row)
+    #group by OA and collapse to list:
+    ta_ls<-ta_summary%>%
+      group_split(OA)%>%
+      setNames(sort(unique(ta_summary$OA)))
+    
+    
     d<-event_data('plotly_click')
     
     if(is.null(d)){
       
-      DT::datatable(df,options=list(scrollX=TRUE))%>%
+      
+      ta_ls<- ta_ls[match(df$OA[!is.na(df$OA)],names(ta_ls))]
+      ## merge the row details
+      ta_ls <- lapply(ta_ls, purrr::transpose)
+      ## dataframe for the datatable
+      
+     
+      Dat <- cbind(" " = "&oplus;", df)
+      Dat$`_details`<-NA
+      Dat$`_details`[!is.na(Dat$OA)]<-I(ta_ls)
+      
+      
+      DT::datatable(Dat, callback = callback, escape = -2,
+                    options = list(
+                      scrollX=TRUE,
+                      columnDefs = list(
+                        list(visible = FALSE, targets = ncol(Dat)),
+                        list(orderable = FALSE, className = 'details-control', targets = 1),
+                        list(className = "dt-center", targets = "_all")
+                      )
+                    ))%>%
         DT::formatCurrency('Remaining')
     }
     
@@ -138,7 +175,21 @@ shinyServer(function(input, output,session) {
     
     df<-rbind(df[which(df$Remaining==df_select$Remaining),],df[which(df$Remaining!=df_select$Remaining),])
     
-    DT::datatable(df,options=list(scrollX=TRUE))%>%
+    ta_ls<- ta_ls[match(df$OA[!is.na(df$OA)],names(ta_ls))]
+    
+    Dat <- cbind(" " = "&oplus;", df)
+    Dat$`_details`<-NA
+    Dat$`_details`[!is.na(Dat$OA)]<-I(ta_ls)
+    
+    DT::datatable(Dat, callback = callback, escape = -2,
+                  options = list(
+                    scrollX=TRUE,
+                    columnDefs = list(
+                      list(visible = FALSE, targets = ncol(Dat)),
+                      list(orderable = FALSE, className = 'details-control', targets = 1),
+                      list(className = "dt-center", targets = "_all")
+                    )
+                  ))%>%
        DT:: formatStyle('Remaining',target='row',
                     color = DT::styleEqual(df_select$Remaining,rep('red',length(df_select$Remaining))))%>%
        DT:: formatCurrency('Remaining')
