@@ -13,6 +13,9 @@ library(lubridate)
 library(elastic)
 library(jsonlite)
 library(stringdist)
+library(purrr)
+library(DT)
+library(data.table)
 
 
 source('readtxt.R')

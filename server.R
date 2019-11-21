@@ -84,19 +84,21 @@ shinyServer(function(input, output,session) {
       filter(!is.na(`End date`))
     
     plot_ly(df,x=~`End date`,y=~Remaining,type='scatter',mode='markers',size=~`Seats Available`,
-            sizes=c(5,40),
-            marker=list(sizemode='diameter',opacity=0.8),
+            sizes=c(5,30),
+            marker=list(sizemode='diameter',opacity=0.5),
             hoverinfo='text',
-            text=~paste('Remaining value:',dollar(Remaining),
+            text=~paste('Contractor:', Contractor,
+                        '<br>Remaining value:',dollar(Remaining),
                         '<br>Seats Available:', `Seats Available`,
                         '<br>End Date:',`End date`,
                         '<br>OA:',OA))%>%
       layout(xaxis=list(title='Contract end date',gridcolor='#DCDCDC'),
              yaxis=list(title='Remaining value',gridcolor='#DCDCDC'),
-             annotations=list(x=c(df$`End date`),
-                              y=c(df$Remaining+15000),
+             annotations=list(x=c(df$`End date`+days(60)),
+                              y=c(df$Remaining-30000),
                               text=c(df$Contractor),
-                              showarrow=F),
+                              showarrow=F,
+                              font=list(size=12)),
              dragmode='select'
       )
     
