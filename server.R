@@ -81,7 +81,7 @@ shinyServer(function(input, output,session) {
   
   output$plot1<-renderPlotly({
     df<-contract_value$value%>%
-      filter(!is.na(`End date`))
+      filter(!is.na(Remaining))
     
     plot_ly(df,x=~`End date`,y=~Remaining,type='scatter',mode='markers',size=~`Seats Available`,
             sizes=c(5,30),
@@ -96,7 +96,7 @@ shinyServer(function(input, output,session) {
              yaxis=list(title='Remaining value',gridcolor='#DCDCDC'),
              annotations=list(x=c(df$`End date`+days(60)),
                               y=c(df$Remaining-30000),
-                              text=c(df$Contractor),
+                              text=ifelse(nchar(df$Contractor)>18,paste0(substring(df$Contractor,1,18),'...'),df$Contractor),
                               showarrow=F,
                               font=list(size=12)),
              dragmode='select'
@@ -127,17 +127,21 @@ shinyServer(function(input, output,session) {
     new_row<-new_row[!is.na(new_row)]
     new_row<-data.frame(OA=new_row,
                         Resource=NA,
-                        `Resource Category`=NA,
                         `TA Number`=NA,
                         `Total Days`=NA,
                         `Days Utilized`=NA,
-                        `Days Remaining`=NA,check.names=F)
+                        `Days Remaining`=NA,
+                        `Start Date`=NA,
+                        `Delivery Date`=NA,check.names=F)
     
     ta_summary<-rbind(ta_summary,new_row)
     #group by OA and collapse to list:
     ta_ls<-ta_summary%>%
-      group_split(OA)%>%
+      group_split(OA,keep=FALSE)%>%
       setNames(sort(unique(ta_summary$OA)))
+    
+    #sort each table by days left
+    ta_ls<-map(ta_ls,arrange,desc(`Days Remaining`))
     
     
     d<-event_data('plotly_click')
@@ -243,41 +247,41 @@ shinyServer(function(input, output,session) {
   
   
   
-  observeEvent(event_data('plotly_click'),
-   {
-     d<-event_data('plotly_click')
-     if(!is.null(d)){
-       
-       #code copied from above to get the oa code
-       df<-contract_value$value%>%
-         select(Contractor,Description,`TA/PA`,CA,OA,`Contract value`,Remaining,`End date`,`Seats Available`)%>%
-         mutate(`Contract value`=dollar(`Contract value`),
-                `End date`=ymd(`End date`))
-       
-       selected_value<-d%>%select(y)%>%collect()
-       
-       df_select<-contract_value$value%>%
-         filter(Remaining==as.double(selected_value))
-       
-       oacode <-df[which(df$Remaining==df_select$Remaining),]$OA
-       
-       #use oa code to find the proper table to display
-       index <- match(oacode, oa)
-       df2 <- ds[[index]]
-       df2$value <- format(round(as.numeric(df2$value), 2), nsmall=2, big.mark=",")
-       
-       removeTab(inputId = "tabs", 'OA_details')
-       appendTab(inputId = "tabs",
-                 tabPanel(
-                   'OA_details',
-                   DT::renderDataTable(df2,
-                                       options=list(scrollX=T))
-                 ))
-       updateTabsetPanel(session, "tabs", selected = 'Data')
-       
-       if(!('OA_details' %in% tab_list)){
-         tab_list <<- c(tab_list, 'OA_details')
-       }
-     }
-  })
+  # observeEvent(event_data('plotly_click'),
+  #  {
+  #    d<-event_data('plotly_click')
+  #    if(!is.null(d)){
+  #      
+  #      #code copied from above to get the oa code
+  #      df<-contract_value$value%>%
+  #        select(Contractor,Description,`TA/PA`,CA,OA,`Contract value`,Remaining,`End date`,`Seats Available`)%>%
+  #        mutate(`Contract value`=dollar(`Contract value`),
+  #               `End date`=ymd(`End date`))
+  #      
+  #      selected_value<-d%>%select(y)%>%collect()
+  #      
+  #      df_select<-contract_value$value%>%
+  #        filter(Remaining==as.double(selected_value))
+  #      
+  #      oacode <-df[which(df$Remaining==df_select$Remaining),]$OA
+  #      
+  #      #use oa code to find the proper table to display
+  #      index <- match(oacode, oa)
+  #      df2 <- ds[[index]]
+  #      df2$value <- format(round(as.numeric(df2$value), 2), nsmall=2, big.mark=",")
+  #      
+  #      removeTab(inputId = "tabs", 'OA_details')
+  #      appendTab(inputId = "tabs",
+  #                tabPanel(
+  #                  'OA_details',
+  #                  DT::renderDataTable(df2,
+  #                                      options=list(scrollX=T))
+  #                ))
+  #      updateTabsetPanel(session, "tabs", selected = 'Data')
+  #      
+  #      if(!('OA_details' %in% tab_list)){
+  #        tab_list <<- c(tab_list, 'OA_details')
+  #      }
+  #    }
+  # })
 })

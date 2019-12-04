@@ -66,3 +66,6 @@ for(i in 1:nrow(contract)){
 l <- list(contract, spent)
 write.xlsx(l,file='./contract.xlsx')
 
+
+rm(l,spent,ds,oa)
+
