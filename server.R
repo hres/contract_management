@@ -99,9 +99,30 @@ shinyServer(function(input, output,session) {
                               text=ifelse(nchar(df$Contractor)>18,paste0(substring(df$Contractor,1,18),'...'),df$Contractor),
                               showarrow=F,
                               font=list(size=12)),
-             dragmode='select'
-      )
+             dragmode='select')
+      })
     
+    
+    output$plot2<-renderPlotly({
+      df<-contract_value$value%>%
+        filter(!is.na(Remaining))
+      
+      plot_ly(df,x=~`End date`,y=~`Days Remaining`,type='scatter',mode='markers',
+              hoverinfo='text',
+              text=~paste('Contractor:', Contractor,
+                          '<br>Remaining value:',dollar(Remaining),
+                          '<br>Seats Available:', `Seats Available`,
+                          '<br>End Date:',`End date`,
+                          '<br>OA:',OA))%>%
+        layout(xaxis=list(title='End Date',gridcolor='#DCDCDC'),
+               yaxis=list(title='Days remaining on the contract',gridcolor='#DCDCDC'))
+               # annotations=list(x=df$`End date`,
+               #                  y=df$`Days Remaining`,
+               #                  text=ifelse(nchar(df$Contractor)>18,paste0(substring(df$Contractor,1,18),'...'),df$Contractor),
+               #                  showarrow=F,
+               #                  font=list(size=12)))
+               
+        })
     
     # plot_ly(df,x=~`End date`,y=~Remaining,text=~Contractor)%>%
     #   add_markers()%>%
@@ -111,7 +132,7 @@ shinyServer(function(input, output,session) {
     #          showlegend=FALSE)
     #
     
-  })
+
   
   
   
@@ -127,12 +148,14 @@ shinyServer(function(input, output,session) {
     new_row<-new_row[!is.na(new_row)]
     new_row<-data.frame(OA=new_row,
                         Resource=NA,
+                        `Resource Category`=NA,
                         `TA Number`=NA,
                         `Total Days`=NA,
                         `Days Utilized`=NA,
                         `Days Remaining`=NA,
                         `Start Date`=NA,
-                        `Delivery Date`=NA,check.names=F)
+                        `Delivery Date`=NA,
+                        Perdiem=NA, check.names=F)
     
     ta_summary<-rbind(ta_summary,new_row)
     #group by OA and collapse to list:
@@ -177,7 +200,7 @@ shinyServer(function(input, output,session) {
     selected_value<-d%>%select(y)%>%collect()
     
     df_select<-contract_value$value%>%
-               filter(Remaining==as.double(selected_value))
+               filter(Remaining==as.numeric(selected_value))
     
     df<-rbind(df[which(df$Remaining==df_select$Remaining),],df[which(df$Remaining!=df_select$Remaining),])
     

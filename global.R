@@ -24,10 +24,10 @@ current_day<-as.POSIXct.Date(Sys.Date())
 #contract<-read_excel('contract.xlsx',1)
 contract$`Days Remaining`<-as.numeric(contract$`End date`-current_day)
 
-ta_summary<-read_excel('./TA_Tracking19-20.xlsx',1)
+ta_summary<-read_excel('./TA_Tracking.xlsx',1)
 ta_summary<-ta_summary%>%dplyr::filter(OA %in% as.character(contract$OA))%>%
   filter(!is.na(OA))%>%
-  select(OA,Resource,`TA Number`,`Total Days`,`Days Utilized`,`Days Remaining`,`Start Date`,`Delivery Date`)
+  select(OA,Resource,`Resource Category`,`TA Number`,`Total Days`,`Days Utilized`,`Days Remaining`,`Start Date`,`Delivery Date`,Perdiem)
 
 ta_summary[,4:6]<-lapply(ta_summary[,4:6],round,2)
 #ta_summary[,c('Start Date','Delivery Date')]<-lapply(ta_summary[,c('Start Date','Delivery Date')],as.Date,format='%Y.%m.%d')
