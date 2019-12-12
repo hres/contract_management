@@ -20,7 +20,7 @@ library(data.table)
 
 source('readtxt.R')
 #contract<-read_excel('contract.xlsx',1)
-ta_summary<-read_excel('./TA_Tracking19-20.xlsx',1)
+ta_summary<-read_excel('./TA_Tracking.xlsx',1)
 ta_summary<-ta_summary%>%dplyr::filter(OA %in% as.character(contract$OA))%>%
   filter(!is.na(OA))%>%
   select(OA,Resource,`TA Number`,`Total Days`,`Days Utilized`,`Days Remaining`,`Start Date`,`Delivery Date`)
