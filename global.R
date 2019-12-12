@@ -19,7 +19,11 @@ library(data.table)
 
 
 source('readtxt.R')
+
+current_day<-as.POSIXct.Date(Sys.Date())
 #contract<-read_excel('contract.xlsx',1)
+contract$`Days Remaining`<-as.numeric(contract$`End date`-current_day)
+
 ta_summary<-read_excel('./TA_Tracking19-20.xlsx',1)
 ta_summary<-ta_summary%>%dplyr::filter(OA %in% as.character(contract$OA))%>%
   filter(!is.na(OA))%>%

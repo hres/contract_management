@@ -83,7 +83,7 @@ shinyServer(function(input, output,session) {
     df<-contract_value$value%>%
       filter(!is.na(Remaining))
     
-    plot_ly(df,x=~`End date`,y=~Remaining,type='scatter',mode='markers',size=~`Seats Available`,
+    plot_ly(df,x=~`Days Remaining`,y=~Remaining,type='scatter',mode='markers',size=~`Seats Available`,
             sizes=c(5,30),
             marker=list(sizemode='diameter',opacity=0.5),
             hoverinfo='text',
@@ -92,9 +92,9 @@ shinyServer(function(input, output,session) {
                         '<br>Seats Available:', `Seats Available`,
                         '<br>End Date:',`End date`,
                         '<br>OA:',OA))%>%
-      layout(xaxis=list(title='Contract end date',gridcolor='#DCDCDC'),
+      layout(xaxis=list(title='Days remaining on the contract',gridcolor='#DCDCDC'),
              yaxis=list(title='Remaining value',gridcolor='#DCDCDC'),
-             annotations=list(x=c(df$`End date`+days(60)),
+             annotations=list(x=c(df$`Days Remaining`+days(10)),
                               y=c(df$Remaining-30000),
                               text=ifelse(nchar(df$Contractor)>18,paste0(substring(df$Contractor,1,18),'...'),df$Contractor),
                               showarrow=F,
@@ -119,7 +119,7 @@ shinyServer(function(input, output,session) {
   output$table1<-DT::renderDataTable({
     
     df<-contract_value$value%>%
-      select(Contractor,Description,`TA/PA`,CA,OA,`Contract value`,Remaining,`End date`,`Seats Available`)%>%
+      select(Contractor,`TA/PA`,CA,OA,`Contract value`,Remaining,`End date`,`Seats Available`)%>%
       mutate(`Contract value`=dollar(`Contract value`),
              `End date`=ymd(`End date`))
     
