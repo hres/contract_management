@@ -141,6 +141,7 @@ shinyServer(function(input, output,session) {
     
     df<-contract_value$value%>%
       select(Contractor,`TA/PA`,CA,OA,`Contract value`,Remaining,`End date`,`Seats Available`)%>%
+      mutate(Remaining = round(Remaining,2))%>%
       mutate(`Contract value`=dollar(`Contract value`),
              `End date`=ymd(`End date`))
     
@@ -199,10 +200,11 @@ shinyServer(function(input, output,session) {
       
     selected_value<-d%>%select(y)%>%collect()
     
-    df_select<-contract_value$value%>%
-               filter(Remaining==as.numeric(selected_value))
+    df_select<-df%>%
+               filter(Remaining==as.double(selected_value))
     
     df<-rbind(df[which(df$Remaining==df_select$Remaining),],df[which(df$Remaining!=df_select$Remaining),])
+    
     
     ta_ls<- ta_ls[match(df$OA[!is.na(df$OA)],names(ta_ls))]
     
