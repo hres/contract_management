@@ -4,6 +4,7 @@ library(dashboardthemes)
 library(shinyjs)
 library(shinyWidgets)
 library(readxl)
+library(dbplyr)
 library(dplyr)
 library(plotly)
 library(ggplot2)
@@ -18,13 +19,23 @@ library(DT)
 library(data.table)
 
 
+#establish connection to database:
+dw<-config::get('contract_management')
+
+con<-dbConnect(drv = RPostgreSQL::PostgreSQL(),
+               host     = dw$server,
+               dbname   = dw$database,
+               user     = dw$uid,
+               password = dw$pwd )
+
+
 source('readtxt.R')
 
 current_day<-as.POSIXct.Date(Sys.Date())
 #contract<-read_excel('contract.xlsx',1)
 contract$`Days Remaining`<-as.numeric(contract$`End date`-current_day)
 
-ta_summary<-read_excel('./TA_Tracking.xlsx',1)
+ta_summary<-tbl(con,'TA_summary')%>%collect()
 ta_summary<-ta_summary%>%dplyr::filter(OA %in% as.character(contract$OA))%>%
   filter(!is.na(OA))%>%
   select(OA,Resource,`Resource Category`,`TA Number`,`Total Days`,`Days Utilized`,`Days Remaining`,`Start Date`,`Delivery Date`,Perdiem)

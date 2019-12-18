@@ -53,7 +53,7 @@ for(i in 1:nrow(spent)){
 }
 
 
-contract <-read_excel('contract.xlsx',1)
+contract <-tbl(con,'contract_vehicle_overall')%>%collect()
 
 for(i in 1:nrow(contract)){
   if(!is.na(contract$OA[i])){
@@ -63,9 +63,9 @@ for(i in 1:nrow(contract)){
 }
 
 
-l <- list(contract, spent)
-write.xlsx(l,file='./contract.xlsx')
+#l <- list(contract, spent)
+#write.xlsx(l,file='./contract.xlsx')
 
 
-rm(l,spent,ds,oa)
+rm(spent,ds,oa)
 
