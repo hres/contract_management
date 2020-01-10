@@ -4,6 +4,7 @@ library(dashboardthemes)
 library(shinyjs)
 library(shinyWidgets)
 library(readxl)
+library(dbplyr)
 library(dplyr)
 library(plotly)
 library(ggplot2)
@@ -15,18 +16,20 @@ library(jsonlite)
 library(stringdist)
 library(purrr)
 library(DT)
+library(DBI)
 library(data.table)
 
+#establish connection to database:
+dw<-config::get('contract_management')
 
+con<-dbConnect(drv = RPostgreSQL::PostgreSQL(),
+               host     = dw$server,
+               dbname   = dw$database,
+               user     = dw$uid,
+               password = dw$pwd )
+
+#data transformations
 source('readtxt.R')
-#contract<-read_excel('contract.xlsx',1)
-ta_summary<-read_excel('./TA_Tracking.xlsx',1)
-ta_summary<-ta_summary%>%dplyr::filter(OA %in% as.character(contract$OA))%>%
-  filter(!is.na(OA))%>%
-  select(OA,Resource,`TA Number`,`Total Days`,`Days Utilized`,`Days Remaining`,`Start Date`,`Delivery Date`)
-
-ta_summary[,4:6]<-lapply(ta_summary[,4:6],round,2)
-#ta_summary[,c('Start Date','Delivery Date')]<-lapply(ta_summary[,c('Start Date','Delivery Date')],as.Date,format='%Y.%m.%d')
 
 connect(es_host = "elastic-gate.hc.local", es_port = 80,errors = "complete")
 
@@ -59,10 +62,8 @@ df<-data.frame(stream=mapply(rep,streams,sapply(positions,nrow))%>%unlist(use.na
                position=sapply(positions,'[','key')%>%unlist(use.names = F),stringsAsFactors = F)
 
 
-contract<-contract%>%
-          mutate(position=df$position[amatch(Contractor,df$position,method='cosine',maxDist=1)])
 
-ifelse(nchar(contract$Contractor)>15,paste0(substring(contract$Contractor,1,15),'...'),contract$Contractor)
+
 
 callback = JS(
   "table.column(1).nodes().to$().css({cursor: 'pointer'});",

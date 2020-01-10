@@ -38,8 +38,22 @@ ui<-tagList(
             radioButtons('click',label='Select contracts by status',choices=c('All','Active','Pending','Anticipated'),inline=T)
         )),
         
-        fluidRow(column(12,plotlyOutput('plot1',height='500px')),
-                 tags$p('Note: Bubble size indicates available seats number',style="margin-left: 30px;")),
+        fluidRow(
+            
+            tabsetPanel(
+                
+                tabPanel('Remaining value vs Remaining days',
+                         
+                         column(12,plotlyOutput('plot1',height='500px')),
+                         tags$p('Note: Bubble size indicates available seats number',style="margin-left: 30px;")
+                ),
+                
+                tabPanel('Remaining days vs End date',
+                         
+                         column(12,plotlyOutput('plot2',height='500px')))
+            )
+            
+            ),
         br(),
         fluidRow(
                     
