@@ -2,18 +2,104 @@ shinyServer(function(input, output,session) {
   
   tab_list <- NULL
   
+  
+  #fetch data from SQL database: using reactivePoll to pull most-up-to-date data
+  data<-reactivePoll(5000,session=NULL,
+                     
+                     checkFunc = function(){
+                       
+                       query <- dbSendQuery(
+                         con,
+                         paste0('SELECT MAX(created_at) as lastCreated FROM "TA_summary" ;')
+                       )
+                       
+                       lastFeedback <- dbFetch(query, -1)
+                     },
+                     
+                     valueFunc=function(){
+                       
+                       tbl(con,'contract_vehicle_overall')%>%collect()
+                       
+                     }
+                     
+  )
+  
+  data2<-reactivePoll(5000,session=NULL,
+                     
+                     checkFunc = function(){
+                       
+                       query <- dbSendQuery(
+                         con,
+                         paste0('SELECT MAX(created_at) as lastCreated FROM "TA_summary" ;')
+                       )
+                       
+                       lastFeedback <- dbFetch(query, -1)
+                     },
+                     
+                     valueFunc=function(){
+                       
+                       tbl(con,'TA_summary')%>%collect()
+                       
+                     }
+                     
+  )
+  
+  contract<-reactive({
+    contract<-data()
+    
+    for(i in 1:nrow(contract)){
+      if(!is.na(contract$OA[i])){
+        index_c <- match(contract$OA[i], spent$OA)
+        contract$Remaining[i] <- contract$`Contract value`[i] - spent$used[index_c]
+      }
+    }
+    
+    current_day<-as.POSIXct.Date(Sys.Date())
+    #contract<-read_excel('contract.xlsx',1)
+    contract$`Days Remaining`<-as.numeric(contract$`End date`-current_day)
+    
+    contract<-contract%>%
+      mutate(position=df$position[amatch(Contractor,df$position,method='cosine',maxDist=1)])
+    
+    return(contract)
+    
+  })
+  
+  
+  
+  
+ 
+  
+  ta_summary<-reactive({
+    
+    ta_summary<-data2()
+    
+    ta_summary<-ta_summary%>%dplyr::filter(OA %in% as.character(contract()$OA))%>%
+      filter(!is.na(OA))%>%
+      select(OA,Resource,`Resource Category`,`TA Number`,`Total Days`,`Days Utilized`,`Days Remaining`,`Start Date`,`Delivery Date`,Perdiem)
+    
+    ta_summary[,4:6]<-lapply(ta_summary[,4:6],round,2)
+    
+    ta_summary
+  })
+    
+    
+  #ta_summary[,c('Start Date','Delivery Date')]<-lapply(ta_summary[,c('Start Date','Delivery Date')],as.Date,format='%Y.%m.%d')
+  
+  
+
   contract_selected<-reactive({
     
     if(input$contract_type=='All'){
-      df<-contract
+      df<-contract()
     }
     
     if(input$contract_type=='Resource Based Vehicles'){
-      df<-contract%>%filter(`Contract type`=='Resource Based Vehicles')
+      df<-contract()%>%filter(`Contract type`=='Resource Based Vehicles')
     }
     
     if(input$contract_type=='SBIPS, Sole Source, Non-ILA, Call Up, Proof of Concept'){
-      df<-contract%>%filter(`Contract type`=='SBIPS, Sole Source, Non-ILA, Call Up, Proof of Concept')
+      df<-contract()%>%filter(`Contract type`=='SBIPS, Sole Source, Non-ILA, Call Up, Proof of Concept')
     }
     
     return(df)
@@ -139,6 +225,8 @@ shinyServer(function(input, output,session) {
   
   output$table1<-DT::renderDataTable({
     
+    ta_summary<-ta_summary()
+    
     df<-contract_value$value%>%
       select(Contractor,`TA/PA`,CA,OA,`Contract value`,Remaining,`End date`,`Seats Available`)%>%
       mutate(Remaining = round(Remaining,2))%>%
@@ -158,11 +246,11 @@ shinyServer(function(input, output,session) {
                         `Delivery Date`=NA,
                         Perdiem=NA, check.names=F)
     
-    ta_summary<-rbind(ta_summary,new_row)
+    ta_summary_complete<-rbind(ta_summary,new_row)
     #group by OA and collapse to list:
-    ta_ls<-ta_summary%>%
+    ta_ls<-ta_summary_complete%>%
       group_split(OA,keep=FALSE)%>%
-      setNames(sort(unique(ta_summary$OA)))
+      setNames(sort(unique(ta_summary_complete$OA)))
     
     #sort each table by days left
     ta_ls<-map(ta_ls,arrange,desc(`Days Remaining`))
@@ -268,6 +356,11 @@ shinyServer(function(input, output,session) {
     
     DT::datatable(selected,rownames=F,options=list(scrollX=TRUE))
     
+  })
+  
+  
+  session$onSessionEnded(function() {
+    dbDisconnect(con)
   })
   
   

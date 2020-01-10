@@ -53,19 +53,11 @@ for(i in 1:nrow(spent)){
 }
 
 
-contract <-tbl(con,'contract_vehicle_overall')%>%collect()
-
-for(i in 1:nrow(contract)){
-  if(!is.na(contract$OA[i])){
-    index_c <- match(contract$OA[i], spent$OA)
-    contract$Remaining[i] <- contract$`Contract value`[i] - spent$used[index_c]
-  }
-}
+rm(ds,oa)
 
 
 #l <- list(contract, spent)
 #write.xlsx(l,file='./contract.xlsx')
 
 
-rm(spent,ds,oa)
 

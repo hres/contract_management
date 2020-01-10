@@ -16,6 +16,7 @@ library(jsonlite)
 library(stringdist)
 library(purrr)
 library(DT)
+library(DBI)
 library(data.table)
 
 
@@ -29,19 +30,8 @@ con<-dbConnect(drv = RPostgreSQL::PostgreSQL(),
                password = dw$pwd )
 
 
+#data transformations
 source('readtxt.R')
-
-current_day<-as.POSIXct.Date(Sys.Date())
-#contract<-read_excel('contract.xlsx',1)
-contract$`Days Remaining`<-as.numeric(contract$`End date`-current_day)
-
-ta_summary<-tbl(con,'TA_summary')%>%collect()
-ta_summary<-ta_summary%>%dplyr::filter(OA %in% as.character(contract$OA))%>%
-  filter(!is.na(OA))%>%
-  select(OA,Resource,`Resource Category`,`TA Number`,`Total Days`,`Days Utilized`,`Days Remaining`,`Start Date`,`Delivery Date`,Perdiem)
-
-ta_summary[,4:6]<-lapply(ta_summary[,4:6],round,2)
-#ta_summary[,c('Start Date','Delivery Date')]<-lapply(ta_summary[,c('Start Date','Delivery Date')],as.Date,format='%Y.%m.%d')
 
 connect(es_host = "elastic-gate.hc.local", es_port = 80,errors = "complete")
 
@@ -74,10 +64,8 @@ df<-data.frame(stream=mapply(rep,streams,sapply(positions,nrow))%>%unlist(use.na
                position=sapply(positions,'[','key')%>%unlist(use.names = F),stringsAsFactors = F)
 
 
-contract<-contract%>%
-          mutate(position=df$position[amatch(Contractor,df$position,method='cosine',maxDist=1)])
 
-ifelse(nchar(contract$Contractor)>15,paste0(substring(contract$Contractor,1,15),'...'),contract$Contractor)
+
 
 callback = JS(
   "table.column(1).nodes().to$().css({cursor: 'pointer'});",
